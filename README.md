@@ -11,9 +11,6 @@ https://rohanarun-phoneclaw.mintlify.app/
 
 Live demo: getsupers.com
 
-IOS app: https://apps.apple.com/us/app/superpowers-ai/id6758969961
-
-
 iOS App: https://apps.apple.com/us/app/superpowers-ai/id6758969961   
 
 Apple Vision Pro demo: https://x.com/Viewforge/status/2028401641549164834 
