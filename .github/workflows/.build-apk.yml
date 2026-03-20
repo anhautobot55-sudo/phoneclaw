@@ -20,22 +20,17 @@ jobs:
           node-version: 18
 
       - name: Install Node Dependencies
-        run: |
-          npm install --legacy-peer-deps || echo "No npm deps to install"
+        run: npm install --legacy-peer-deps || echo "No npm deps"
 
-      - name: Grant Execute Permission
-        run: find . -name "gradlew" -exec chmod +x {} +
-
-      - name: Build with Gradle (Auto-Detect Path)
+      - name: Build with Gradle (Low Memory Mode)
         run: |
-          if [ -f "./gradlew" ]; then
-            ./gradlew assembleRelease
-          elif [ -d "./android" ]; then
-            cd android && ./gradlew assembleRelease
-          elif [ -d "./app" ]; then
-            cd app && ./gradlew assembleRelease
+          find . -name "gradlew" -exec chmod +x {} +
+          # Chạy build với giới hạn bộ nhớ để không bị crash máy chủ GitHub
+          export GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2048m -Dorg.gradle.daemon=false"
+          if [ -d "./android" ]; then
+            cd android && ./gradlew assembleRelease --no-daemon
           else
-            echo "Cannot find gradlew or android folder"; exit 1
+            ./gradlew assembleRelease --no-daemon
           fi
 
       - name: Upload APK
