@@ -7,12 +7,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Java 17
-        uses: actions/setup-node@v4 # Sửa lại dùng đúng action setup
-      - uses: actions/setup-java@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Setup Node.js 18
         uses: actions/setup-node@v4
@@ -20,27 +20,29 @@ jobs:
           node-version: 18
 
       - name: Install Dependencies
-        run: npm install --legacy-peer-deps || echo "Skip npm"
+        run: npm install --legacy-peer-deps || echo "No npm deps"
 
-      - name: Force Build APK
+      - name: Clean and Build Debug APK
         run: |
-          # Cấp quyền thực thi
+          # Cấp quyền thực thi tuyệt đối
+          chmod -R +x .
           find . -name "gradlew" -exec chmod +x {} +
           
-          # Tự tạo file cấu hình Android nếu thiếu
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-          if [ -d "./android" ]; then echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties; fi
-
-          # Lệnh build an toàn, bỏ qua các lỗi lint/checking không cần thiết
+          # Thiết lập bộ nhớ thấp để tránh crash máy chủ GitHub
           export GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2048m -Dorg.gradle.daemon=false"
+          
+          # Chạy lệnh dọn dẹp trước khi build bản Debug
           if [ -d "./android" ]; then
-            cd android && ./gradlew assembleRelease -x test -x lint --no-daemon
+            cd android
+            ./gradlew clean
+            ./gradlew assembleDebug --no-daemon -x test -x lint
           else
-            ./gradlew assembleRelease -x test -x lint --no-daemon
+            ./gradlew clean
+            ./gradlew assembleDebug --no-daemon -x test -x lint
           fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PhoneClaw-Final
+          name: PhoneClaw-Debug-App
           path: "**/*.apk"
