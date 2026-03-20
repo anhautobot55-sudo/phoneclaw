@@ -6,30 +6,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      
-      - name: Install Dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Fix Permissions and Build
+      - name: Install Node Dependencies
         run: |
-          # Tìm và cấp quyền thực thi cho tất cả file gradlew trong dự án
-          find . -name "gradlew" -exec chmod +x {} +
-          # Chạy lệnh build trực tiếp từ thư mục gốc
-          ./gradlew assembleRelease || (cd android && ./gradlew assembleRelease)
+          npm install --legacy-peer-deps || echo "No npm deps to install"
+
+      - name: Grant Execute Permission
+        run: find . -name "gradlew" -exec chmod +x {} +
+
+      - name: Build with Gradle (Auto-Detect Path)
+        run: |
+          if [ -f "./gradlew" ]; then
+            ./gradlew assembleRelease
+          elif [ -d "./android" ]; then
+            cd android && ./gradlew assembleRelease
+          elif [ -d "./app" ]; then
+            cd app && ./gradlew assembleRelease
+          else
+            echo "Cannot find gradlew or android folder"; exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PhoneClaw-Release
-          path: "**/*.apk" # Tìm tất cả file apk được tạo ra trong bất kỳ thư mục nào
+          name: PhoneClaw-Final
+          path: "**/*.apk"
