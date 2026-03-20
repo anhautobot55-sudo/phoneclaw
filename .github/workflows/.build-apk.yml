@@ -21,13 +21,15 @@ jobs:
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Build Release APK
+      - name: Fix Permissions and Build
         run: |
-          chmod +x gradlew
-          ./gradlew assembleRelease
+          # Tìm và cấp quyền thực thi cho tất cả file gradlew trong dự án
+          find . -name "gradlew" -exec chmod +x {} +
+          # Chạy lệnh build trực tiếp từ thư mục gốc
+          ./gradlew assembleRelease || (cd android && ./gradlew assembleRelease)
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: PhoneClaw-Release
-          path: app/build/outputs/apk/release/*.apk
+          path: "**/*.apk" # Tìm tất cả file apk được tạo ra trong bất kỳ thư mục nào
